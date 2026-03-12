@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.25">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GE.SWAPI.Domain\GE.SWAPI.Domain.csproj" />
     <ProjectReference Include="..\GE.SWAPI.StarshipDb\GE.SWAPI.StarshipDb.csproj" />
   </ItemGroup>

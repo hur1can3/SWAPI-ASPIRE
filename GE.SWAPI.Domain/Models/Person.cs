@@ -21,6 +21,7 @@ namespace GE.SWAPI.Domain.Models
         [MaxLength(100)]
         public string Url { get; set; } = string.Empty;
 
+        [JsonIgnore]
         public List<Starship> Starships { get; set; } = new();  
     }
 }

@@ -15,32 +15,32 @@ namespace GE.SWAPI.SharshipDbManager
             _httpClient = httpClient;
         }
 
-        public async Task<List<Starship>> GetAllStarshipsAsync()
+        public async Task<List<StarshipDto>> GetAllStarshipsAsync()
         {
             try
             {
                 var response = await _httpClient.GetAsync($"{BaseUrl}/starships");
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var starships = JsonSerializer.Deserialize<List<Starship>>(responseContent, new JsonSerializerOptions
+                var starships = JsonSerializer.Deserialize<List<StarshipDto>>(responseContent, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
-                return starships ?? new List<Starship>();
+                return starships ?? new List<StarshipDto>();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching starships: {ex.Message}");
-                return new List<Starship>();
+                return new List<StarshipDto>();
             }
         }
 
-        public async Task<Starship> GetStarshipByIdAsync(int id)
+        public async Task<StarshipDto> GetStarshipByIdAsync(int id)
         {
             try
             {
                 var response = await _httpClient.GetAsync($"{BaseUrl}/starships/{id}");
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var starship = JsonSerializer.Deserialize<Starship>(responseContent, new JsonSerializerOptions
+                var starship = JsonSerializer.Deserialize<StarshipDto>(responseContent, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });

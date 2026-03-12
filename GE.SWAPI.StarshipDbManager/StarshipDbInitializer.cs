@@ -1,4 +1,5 @@
 ﻿using GE.SWAPI.Domain.Interfaces;
+using GE.SWAPI.Domain.Models;
 using GE.SWAPI.StarshipDb;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -61,28 +62,44 @@ namespace GE.SWAPI.SharshipDbManager
                         await dbContext.SaveChangesAsync(cancellationToken);
 
                         Console.WriteLine("Seeding starships from SWAPI...");
+                        List<Starship> starships = new List<Starship>();
                         // Fetch all starships from SWAPI
-                        var starships = await swApiService.GetAllStarshipsAsync();
+                        var starshipDtos = await swApiService.GetAllStarshipsAsync();
                         // Fetch all films from SWAPI
                         var allFilms = await swApiService.GetAllFilmsAsync();
-                        var filmCache = allFilms.ToDictionary(f => f.Url, f => f.Title);
                         // Fetch all pilots from SWAPI
                         var allPilots = await swApiService.GetAllPeopleAsync();
-                        var pilotCache = allPilots.ToDictionary(p => p.Url, p => p.Name);
 
-                        foreach (var starship in starships)
+                        foreach (var starship in starshipDtos)
                         {
-                            starship.Id = 0; // Reset ID to let the database assign a new one
+                            var entity = new Starship() { };
+                            entity.Id = 0; // Reset ID to let the database assign a new one
+                            entity.CargoCapacity = starship.CargoCapacity;
+                            entity.Consumables = starship.Consumables;
+                            entity.CostInCredits = starship.CostInCredits;
+                            entity.Created = starship.Created;
+                            entity.Crew = starship.Crew;
+                            entity.Edited = starship.Edited;
+                            entity.HyperdriveRating = starship.HyperdriveRating;
+                            entity.Length   = starship.Length;
+                            entity.Manufacturer = starship.Manufacturer;
+                            entity.MaxAtmospheringSpeed = starship.MaxAtmospheringSpeed;
+                            entity.MGLT = starship.MGLT;
+                            entity.Model = starship.Model;
+                            entity.Name = starship.Name;
+                            entity.Passengers = starship.Passengers;
+                            entity.StarshipClass = starship.StarshipClass;
+                            entity.Url = starship.Url;
 
                             // Map film URLs to names
-                            starship.Films = starship.Films
-                                .Where(f => filmCache.ContainsKey(f.Url))
+                            entity.Films = allFilms.Where(x => starship.Films.Contains(x.Url))
                                 .ToList();
 
                             // Map pilot URLs to names
-                            starship.Pilots = starship.Pilots
-                                .Where(p => pilotCache.ContainsKey(p.Url))                            
+                            entity.Pilots = allPilots.Where(x => starship.Pilots.Contains(x.Url))
                                 .ToList();
+
+                            starships.Add(entity);
                         }
                         dbContext.Starships.AddRange(starships);
                         await dbContext.SaveChangesAsync(cancellationToken);

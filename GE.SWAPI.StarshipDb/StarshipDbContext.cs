@@ -14,14 +14,25 @@ namespace GE.SWAPI.StarshipDb
         {
             var jsonOptions = new JsonSerializerOptions();
 
+            // Configure many-to-many relationship between Starship and Person (Pilots)
             modelBuilder.Entity<Starship>()
-                .HasMany(x => x.Pilots);
+                .HasMany(s => s.Pilots)
+                .WithMany(p => p.Starships)
+                .UsingEntity(j => j.ToTable("StarshipPilots"));
 
-            modelBuilder.Entity<Starship>().HasMany(x => x.Films);
+            // Configure many-to-many relationship between Starship and Film
+            modelBuilder.Entity<Starship>()
+                .HasMany(s => s.Films)
+                .WithMany(f => f.Starships)
+                .UsingEntity(j => j.ToTable("StarshipFilms"));
+
+            // Add Indexes for Person
             modelBuilder.Entity<Person>().HasIndex(x => x.Name);
+
+            // Add Indexes for Film
             modelBuilder.Entity<Film>().HasIndex(x => x.Title);
 
-            // Add Indexes
+            // Add Indexes for Starship
             modelBuilder.Entity<Starship>()
                 .HasIndex(s => s.Name);
 

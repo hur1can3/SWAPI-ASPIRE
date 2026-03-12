@@ -9,8 +9,8 @@ namespace GE.SWAPI.Domain.Interfaces
 {
     public interface ISwApiService
     {
-        Task<List<Starship>> GetAllStarshipsAsync();
-        Task<Starship> GetStarshipByIdAsync(int id);
+        Task<List<StarshipDto>> GetAllStarshipsAsync();
+        Task<StarshipDto> GetStarshipByIdAsync(int id);
         Task<List<Film>> GetAllFilmsAsync();
         Task<List<Person>> GetAllPeopleAsync();
     }
