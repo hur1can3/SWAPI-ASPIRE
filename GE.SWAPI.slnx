@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="GE.SWAPI.ApiService/GE.SWAPI.ApiService.csproj" />
+  <Project Path="GE.SWAPI.AppHost/GE.SWAPI.AppHost.csproj" />
+  <Project Path="GE.SWAPI.Domain/GE.SWAPI.Domain.csproj" />
+  <Project Path="GE.SWAPI.ServiceDefaults/GE.SWAPI.ServiceDefaults.csproj" />
+  <Project Path="GE.SWAPI.StarshipDb/GE.SWAPI.StarshipDb.csproj" />
+  <Project Path="GE.SWAPI.StarshipDbManager/GE.SWAPI.StarshipDbManager.csproj" />
+  <Project Path="GE.SWAPI.Tests/GE.SWAPI.Tests.csproj" />
+  <Project Path="GE.SWAPI.Web/GE.SWAPI.Web.csproj" />
+</Solution>

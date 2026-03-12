@@ -1,0 +1,18 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.1.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>ab5f0cdc-c65e-4b54-83d6-2764a6809526</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.0" />
+    <ProjectReference Include="..\GE.SWAPI.ApiService\GE.SWAPI.ApiService.csproj" />
+    <ProjectReference Include="..\GE.SWAPI.StarshipDbManager\GE.SWAPI.StarshipDbManager.csproj" />
+    <ProjectReference Include="..\GE.SWAPI.Web\GE.SWAPI.Web.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,6 @@
+@GE.SWAPI.ApiService_HostAddress = http://localhost:5227
+
+GET {{GE.SWAPI.ApiService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
