@@ -1,4 +1,5 @@
-﻿using GE.SWAPI.Application.Services;
+﻿using GE.SWAPI.ApiService.Models;
+using GE.SWAPI.Application.Services;
 using GE.SWAPI.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,52 @@ namespace GE.SWAPI.ApiService.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"Error retrieving starships: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        //[Authorize(Roles = "Admin, User")]
+        [HttpGet("paged")]
+        [ProducesResponseType(typeof(PagedResult<Starship>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetStarshipsPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1) pageSize = 10;
+                if (pageSize > 100) pageSize = 100; // Limit max page size
+
+                var allStarships = await _starshipService.GetAllStarshipsAsync();
+                if (allStarships == null)
+                {
+                    return Ok(new PagedResult<Starship>
+                    {
+                        Data = new List<Starship>(),
+                        TotalRecords = 0,
+                        Page = page,
+                        PageSize = pageSize
+                    });
+                }
+
+                var totalRecords = allStarships.Count();
+                var pagedData = allStarships
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                var result = new PagedResult<Starship>
+                {
+                    Data = pagedData,
+                    TotalRecords = totalRecords,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error retrieving paged starships: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
         }
