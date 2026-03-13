@@ -17,7 +17,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { theme } from "./theme";
 import "./App.css";
-import { DataTable } from "mantine-datatable";
+import { DataTable, type DataTableSortStatus } from "mantine-datatable";
 import { IconEdit, IconEye, IconTrash } from "@tabler/icons-react";
 
 interface Starship {
@@ -52,6 +52,10 @@ function App() {
   const [page, setPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
+    columnAccessor: "name",
+    direction: "asc",
+  });
 
   const [selectedStarship, setSelectedStarship] = useState<Starship | null>(null);
   const [modalAction, setModalAction] = useState<"view" | "edit" | "delete" | null>(null);
@@ -68,9 +72,13 @@ function App() {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL; // Provided by Aspire
-      const response = await fetch(
-        `${apiUrl}/starship/paged?page=${page}&pageSize=${recordsPerPage}`,
-      );
+      let url = `${apiUrl}/starship/paged?page=${page}&pageSize=${recordsPerPage}`;
+
+      if (sortStatus) {
+        url += `&sortColumn=${sortStatus.columnAccessor}&sortDirection=${sortStatus.direction}`;
+      }
+
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -170,7 +178,7 @@ function App() {
 
   useEffect(() => {
     fetchStarshipData();
-  }, [page, recordsPerPage]);
+  }, [page, recordsPerPage, sortStatus]);
 
   return (
     <MantineProvider theme={theme}>
@@ -366,6 +374,8 @@ function App() {
             recordsPerPage={recordsPerPage}
             recordsPerPageOptions={[10, 20, 50, 100]}
             onRecordsPerPageChange={setRecordsPerPage}
+            sortStatus={sortStatus}
+            onSortStatusChange={setSortStatus}
             columns={[
               {
                 accessor: "actions",
@@ -416,19 +426,19 @@ function App() {
                   </Group>
                 ),
               },
-              { accessor: "name" },
-              { accessor: "model" },
-              { accessor: "manufacturer" },
-              { accessor: "cost_in_credits" },
-              { accessor: "length" },
-              { accessor: "max_atmosphering_speed" },
-              { accessor: "crew" },
-              { accessor: "passengers" },
-              { accessor: "cargo_capacity" },
-              { accessor: "consumables" },
-              { accessor: "hyperdrive_rating" },
-              { accessor: "MGLT" },
-              { accessor: "starship_class" },
+              { accessor: "name", sortable: true },
+              { accessor: "model", sortable: true },
+              { accessor: "manufacturer", sortable: true },
+              { accessor: "cost_in_credits", sortable: true },
+              { accessor: "length", sortable: true },
+              { accessor: "max_atmosphering_speed", sortable: true },
+              { accessor: "crew", sortable: true },
+              { accessor: "passengers", sortable: true },
+              { accessor: "cargo_capacity", sortable: true },
+              { accessor: "consumables", sortable: true },
+              { accessor: "hyperdrive_rating", sortable: true },
+              { accessor: "MGLT", sortable: true },
+              { accessor: "starship_class", sortable: true },
             ]}
             records={starshipData}
           />

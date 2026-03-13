@@ -43,7 +43,11 @@ namespace GE.SWAPI.ApiService.Controllers
         //[Authorize(Roles = "Admin, User")]
         [HttpGet("paged")]
         [ProducesResponseType(typeof(PagedResult<Starship>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetStarshipsPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetStarshipsPaged(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortColumn = null,
+            [FromQuery] string? sortDirection = "asc")
         {
             try
             {
@@ -61,6 +65,12 @@ namespace GE.SWAPI.ApiService.Controllers
                         Page = page,
                         PageSize = pageSize
                     });
+                }
+
+                // Apply sorting if specified
+                if (!string.IsNullOrEmpty(sortColumn))
+                {
+                    allStarships = ApplySorting(allStarships, sortColumn, sortDirection);
                 }
 
                 var totalRecords = allStarships.Count();
@@ -84,6 +94,55 @@ namespace GE.SWAPI.ApiService.Controllers
                 _logger.LogError($"Error retrieving paged starships: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
+        }
+
+        private IEnumerable<Starship> ApplySorting(IEnumerable<Starship> starships, string sortColumn, string? sortDirection)
+        {
+            var isDescending = sortDirection?.ToLower() == "desc";
+
+            return sortColumn.ToLower() switch
+            {
+                "name" => isDescending 
+                    ? starships.OrderByDescending(s => s.Name).ToList()
+                    : starships.OrderBy(s => s.Name).ToList(),
+                "model" => isDescending 
+                    ? starships.OrderByDescending(s => s.Model).ToList()
+                    : starships.OrderBy(s => s.Model).ToList(),
+                "manufacturer" => isDescending 
+                    ? starships.OrderByDescending(s => s.Manufacturer).ToList()
+                    : starships.OrderBy(s => s.Manufacturer).ToList(),
+                "starship_class" => isDescending 
+                    ? starships.OrderByDescending(s => s.StarshipClass).ToList()
+                    : starships.OrderBy(s => s.StarshipClass).ToList(),
+                "cost_in_credits" => isDescending 
+                    ? starships.OrderByDescending(s => s.CostInCredits).ToList()
+                    : starships.OrderBy(s => s.CostInCredits).ToList(),
+                "length" => isDescending 
+                    ? starships.OrderByDescending(s => s.Length).ToList()
+                    : starships.OrderBy(s => s.Length).ToList(),
+                "crew" => isDescending 
+                    ? starships.OrderByDescending(s => s.Crew).ToList()
+                    : starships.OrderBy(s => s.Crew).ToList(),
+                "passengers" => isDescending 
+                    ? starships.OrderByDescending(s => s.Passengers).ToList()
+                    : starships.OrderBy(s => s.Passengers).ToList(),
+                "max_atmosphering_speed" => isDescending 
+                    ? starships.OrderByDescending(s => s.MaxAtmospheringSpeed).ToList()
+                    : starships.OrderBy(s => s.MaxAtmospheringSpeed).ToList(),
+                "cargo_capacity" => isDescending 
+                    ? starships.OrderByDescending(s => s.CargoCapacity).ToList()
+                    : starships.OrderBy(s => s.CargoCapacity).ToList(),
+                "consumables" => isDescending 
+                    ? starships.OrderByDescending(s => s.Consumables).ToList()
+                    : starships.OrderBy(s => s.Consumables).ToList(),
+                "hyperdrive_rating" => isDescending 
+                    ? starships.OrderByDescending(s => s.HyperdriveRating).ToList()
+                    : starships.OrderBy(s => s.HyperdriveRating).ToList(),
+                "mglt" => isDescending 
+                    ? starships.OrderByDescending(s => s.MGLT).ToList()
+                    : starships.OrderBy(s => s.MGLT).ToList(),
+                _ => starships // Default: no sorting
+            };
         }
 
         //[Authorize(Roles = "Admin, User")]
