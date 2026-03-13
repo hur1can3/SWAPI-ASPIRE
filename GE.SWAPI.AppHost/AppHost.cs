@@ -1,3 +1,5 @@
+using Google.Protobuf.WellKnownTypes;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
@@ -12,18 +14,34 @@ if (builder.ExecutionContext.IsRunMode)
 
 var starshipDb = postgres.AddDatabase("starshipdb");
 
-var catalogDbManager = builder.AddProject<Projects.GE_SWAPI_StarshipDbManager>("starshipdbmanager")
+var starshipDbManager = builder.AddProject<Projects.GE_SWAPI_StarshipDbManager>("starshipdbmanager")
     .WithReference(starshipDb)
     .WaitFor(starshipDb)
     .WithHttpHealthCheck("/health")
     .WithHttpCommand("/reset-db", "Reset Database", commandOptions: new() { IconName = "DatabaseLightning" });
 
-var apiService = builder.AddProject<Projects.GE_SWAPI_ApiService>("apiservice");
+var apiService = builder.AddProject<Projects.GE_SWAPI_ApiService>("apiservice")
+    .WithReference(starshipDb)
+    .WaitFor(starshipDb)
+    .WithHttpsEndpoint(name: "api")
+    .WithUrlForEndpoint("api", url => url.Url = "/api"); 
 
-builder.AddProject<Projects.GE_SWAPI_Web>("webfrontend")
+builder.AddProject<Projects.GE_SWAPI_Web>("webfrontend-blazor")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(apiService)
     .WaitFor(apiService);
+
+var webfrontend = builder.AddViteApp("webfrontend-react", "../GE.SWAPI.Frontend")
+    .WithReference(apiService)
+    .WaitFor(apiService)
+    // Use ReferenceExpression to combine the Endpoint and the path string
+    .WithEnvironment("VITE_API_URL", ReferenceExpression.Create($"{apiService.GetEndpoint("api")}/api"))
+    .WithEnvironment("BROWSER", "none");
+
+
+
+apiService.PublishWithContainerFiles(webfrontend, "wwwroot");
+
 
 builder.Build().Run();

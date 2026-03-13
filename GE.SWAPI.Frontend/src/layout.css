@@ -1,0 +1,8 @@
+/* 👇 Expressly import the mantine core styles into mantine-core layer */
+@import '@mantine/core/styles.css' layer(mantine-core);
+
+/* 👇 Expressly import the mantine-datatable styles into mantine-datatable layer */
+@import '../node_modules/mantine-datatable/dist/styles.css' layer(mantine-datatable);
+
+/* 👇 Make sure the styles are applied in the correct order */
+@layer mantine-core, mantine-datatable;

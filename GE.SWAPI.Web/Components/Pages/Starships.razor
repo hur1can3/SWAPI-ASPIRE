@@ -1,0 +1,329 @@
+﻿@page "/starships"
+@using GE.SWAPI.Domain.Models
+@using GE.SWAPI.Web.Components.Dialogs
+
+@inject SwApiClient SwApiClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Starships</PageTitle>
+
+<MudText Typo="Typo.h3" Class="mb-4">Starships</MudText>
+<MudText Typo="Typo.body1" Class="mb-6">This component demonstrates showing data loaded from a backend API service.</MudText>
+
+@if (starships == null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    <MudText Typo="Typo.body2" Align="Align.Center">Loading starships...</MudText>
+}
+else
+{
+    <MudTable Items="@starships" Hover="true" Breakpoint="Breakpoint.Sm" 
+              Loading="@_loading" LoadingProgressColor="Color.Info"
+              Filter="new Func<Starship,bool>(FilterFunc)" 
+              Dense="true" Striped="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Starship Database</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="_searchString" Placeholder="Search" 
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                          IconSize="Size.Medium" Class="mt-0" Immediate="true"></MudTextField>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                       OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add" Class="ml-4">
+                Add Starship
+            </MudButton>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Id</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Model</MudTh>
+            <MudTh>Manufacturer</MudTh>
+            <MudTh>Length</MudTh>
+            <MudTh>Crew</MudTh>
+            <MudTh>Starship Class</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Model">@context.Model</MudTd>
+            <MudTd DataLabel="Manufacturer">@context.Manufacturer</MudTd>
+            <MudTd DataLabel="Length">@context.Length</MudTd>
+            <MudTd DataLabel="Crew">@context.Crew</MudTd>
+            <MudTd DataLabel="Starship Class">@context.StarshipClass</MudTd>
+            <MudTd DataLabel="Actions">
+               <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                               Color="Color.Primary" 
+                               Size="Size.Small" 
+                               OnClick="@((e) => HandleEdit(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                               Color="Color.Error" 
+                               Size="Size.Small" 
+                               OnClick="@((e) => HandleDelete(context))" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    private Starship[]? starships;
+    private bool _loading = false;
+    private string _searchString = "";
+    private string? _errorMessage;
+    private Starship? _selectedStarship;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStarships();
+    }
+
+    private async Task HandleEdit(Starship starship)
+    {
+        _selectedStarship = starship;
+        await OpenEditDialog(starship);
+    }
+
+    private async Task HandleDelete(Starship starship)
+    {
+        _selectedStarship = starship;
+        await OpenDeleteDialog(starship);
+    }
+
+    private async Task LoadStarships()
+    {
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            starships = await SwApiClient.GetStarships();
+
+            if (starships == null || starships.Length == 0)
+            {
+                _errorMessage = "No starships found in the database.";
+            }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            _errorMessage = "Unable to connect to the API service. Please check your connection and try again.";
+            Snackbar.Add($"Network error: {httpEx.Message}", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "An unexpected error occurred while loading starships.";
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool FilterFunc(Starship starship)
+    {
+        if (starship == null) return false;
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+
+        return starship.Name?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true ||
+               starship.Model?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true ||
+               starship.Manufacturer?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true ||
+               starship.StarshipClass?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        Console.WriteLine("OpenCreateDialog called");
+
+        try
+        {
+            var parameters = new DialogParameters
+            {
+                { "Starship", new Starship() },
+                { "IsEdit", false }
+            };
+
+            var dialog = DialogService.Show<StarshipDialog>("Create Starship", parameters);
+            var result = await dialog.Result;
+
+            if (result == null) return;
+
+            if (!result.Canceled && result.Data is Starship newStarship)
+            {
+                if (string.IsNullOrWhiteSpace(newStarship.Name))
+                {
+                    Snackbar.Add("Starship name is required.", Severity.Warning);
+                    return;
+                }
+
+                try
+                {
+                    var createdStarship = await SwApiClient.CreateStarship(newStarship);
+
+                    if (createdStarship != null)
+                    {
+                        Snackbar.Add($"Starship '{newStarship.Name}' created successfully!", Severity.Success);
+                        await LoadStarships();
+                    }
+                    else
+                    {
+                        Snackbar.Add("Failed to create starship. The server returned no data.", Severity.Error);
+                    }
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    Snackbar.Add($"Network error: Unable to create starship. {httpEx.Message}", Severity.Error);
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Error creating starship: {ex.Message}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening create dialog: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OpenEditDialog(Starship starship)
+    {
+        Console.WriteLine($"OpenEditDialog called for starship: {starship?.Name ?? "null"}");
+
+        if (starship == null)
+        {
+            Snackbar.Add("Invalid starship data.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            // Create a copy of the starship to avoid modifying the original
+            var starshipCopy = new Starship
+            {
+                Id = starship.Id,
+                Name = starship.Name ?? string.Empty,
+                Model = starship.Model ?? string.Empty,
+                Manufacturer = starship.Manufacturer ?? string.Empty,
+                CostInCredits = starship.CostInCredits ?? string.Empty,
+                Length = starship.Length ?? string.Empty,
+                MaxAtmospheringSpeed = starship.MaxAtmospheringSpeed ?? string.Empty,
+                Crew = starship.Crew ?? string.Empty,
+                Passengers = starship.Passengers ?? string.Empty,
+                CargoCapacity = starship.CargoCapacity ?? string.Empty,
+                Consumables = starship.Consumables ?? string.Empty,
+                HyperdriveRating = starship.HyperdriveRating ?? string.Empty,
+                MGLT = starship.MGLT ?? string.Empty,
+                StarshipClass = starship.StarshipClass ?? string.Empty,
+                Url = starship.Url ?? string.Empty,
+                Created = starship.Created,
+                Edited = starship.Edited,
+                Pilots = starship.Pilots ?? new List<Person>(),
+                Films = starship.Films ?? new List<Film>()
+            };
+
+            var parameters = new DialogParameters
+            {
+                { "Starship", starshipCopy },
+                { "IsEdit", true }
+            };
+
+            var dialog = DialogService.Show<StarshipDialog>("Edit Starship", parameters);
+            var result = await dialog.Result;
+
+            if (result == null) return;
+
+            if (!result.Canceled && result.Data is Starship updatedStarship)
+            {
+                if (string.IsNullOrWhiteSpace(updatedStarship.Name))
+                {
+                    Snackbar.Add("Starship name is required.", Severity.Warning);
+                    return;
+                }
+
+                try
+                {
+                    var updated = await SwApiClient.UpdateStarship(updatedStarship.Id, updatedStarship);
+
+                    if (updated != null)
+                    {
+                        Snackbar.Add($"Starship '{updatedStarship.Name}' updated successfully!", Severity.Success);
+                        await LoadStarships();
+                    }
+                    else
+                    {
+                        Snackbar.Add("Failed to update starship. The server returned no data.", Severity.Error);
+                    }
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    Snackbar.Add($"Network error: Unable to update starship. {httpEx.Message}", Severity.Error);
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Error updating starship: {ex.Message}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening edit dialog: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OpenDeleteDialog(Starship starship)
+    {
+        if (starship == null)
+        {
+            Snackbar.Add("Invalid starship data.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var parameters = new DialogParameters
+            {
+                { "ContentText", $"Are you sure you want to delete '{starship.Name}'? This action cannot be undone." },
+                { "ButtonText", "Delete" },
+                { "Color", Color.Error }
+            };
+
+            var dialog = DialogService.Show<ConfirmationDialog>("Delete Starship", parameters);
+            var result = await dialog.Result;
+
+            if (result == null) return;
+
+            if (!result.Canceled)
+            {
+                try
+                {
+                    var success = await SwApiClient.DeleteStarship(starship.Id);
+
+                    if (success)
+                    {
+                        Snackbar.Add($"Starship '{starship.Name}' deleted successfully!", Severity.Success);
+                        await LoadStarships();
+                    }
+                    else
+                    {
+                        Snackbar.Add($"Failed to delete starship '{starship.Name}'.", Severity.Error);
+                    }
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    Snackbar.Add($"Network error: Unable to delete starship. {httpEx.Message}", Severity.Error);
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Error deleting starship: {ex.Message}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening delete dialog: {ex.Message}", Severity.Error);
+        }
+    }
+}

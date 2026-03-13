@@ -1,0 +1,132 @@
+@using GE.SWAPI.Domain.Models
+
+<MudDialog>
+    <DialogContent>
+        @if (_errors.Any())
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">
+                @foreach (var error in _errors)
+                {
+                    <MudText Typo="Typo.body2">@error</MudText>
+                }
+            </MudAlert>
+        }
+
+        <MudForm @ref="_form" @bind-IsValid="@_formIsValid">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Starship.Name" 
+                                  Label="Name" 
+                                  Required="true"
+                                  RequiredError="Name is required" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Starship.Model" 
+                                  Label="Model" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Starship.Manufacturer" 
+                                  Label="Manufacturer" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Starship.StarshipClass" 
+                                  Label="Starship Class" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Starship.CostInCredits" 
+                                  Label="Cost in Credits" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="Starship.Length" 
+                                  Label="Length" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="Starship.Crew" 
+                                  Label="Crew" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="Starship.Passengers" 
+                                  Label="Passengers" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Starship.MaxAtmospheringSpeed" 
+                                  Label="Max Atmosphering Speed" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Starship.HyperdriveRating" 
+                                  Label="Hyperdrive Rating" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Starship.MGLT" 
+                                  Label="MGLT" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Starship.CargoCapacity" 
+                                  Label="Cargo Capacity" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Starship.Consumables" 
+                                  Label="Consumables" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="!_formIsValid">
+            @(IsEdit ? "Update" : "Create")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] 
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Starship Starship { get; set; } = new();
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    private MudForm _form = null!;
+    private bool _formIsValid;
+    private string[] _errors = Array.Empty<string>();
+
+    protected override void OnInitialized()
+    {
+        // Ensure Starship is not null
+        Starship ??= new Starship();
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Submit()
+    {
+        try
+        {
+            await _form.Validate();
+
+            if (!_formIsValid)
+            {
+                return;
+            }
+
+            // Additional validation
+            if (string.IsNullOrWhiteSpace(Starship.Name))
+            {
+                _errors = new[] { "Starship name is required." };
+                return;
+            }
+
+            MudDialog.Close(DialogResult.Ok(Starship));
+        }
+        catch (Exception ex)
+        {
+            _errors = new[] { $"Error validating form: {ex.Message}" };
+        }
+    }
+}

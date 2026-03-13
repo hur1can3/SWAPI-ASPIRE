@@ -1,0 +1,54 @@
+@if (HasError)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-4">
+        <MudText Typo="Typo.h6">An error occurred</MudText>
+        <MudText Typo="Typo.body2">@ErrorMessage</MudText>
+        @if (ShowDetails && !string.IsNullOrEmpty(StackTrace))
+        {
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.caption" Class="mt-2">
+                <pre style="max-height: 200px; overflow-y: auto;">@StackTrace</pre>
+            </MudText>
+        }
+        <MudButton OnClick="Reset" Color="Color.Primary" Variant="Variant.Text" Class="mt-2">
+            Try Again
+        </MudButton>
+    </MudAlert>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool ShowDetails { get; set; } = false;
+
+    private bool HasError { get; set; }
+    private string ErrorMessage { get; set; } = string.Empty;
+    private string StackTrace { get; set; } = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        HasError = false;
+    }
+
+    public void ProcessError(Exception exception)
+    {
+        HasError = true;
+        ErrorMessage = exception.Message;
+        StackTrace = exception.StackTrace ?? string.Empty;
+        StateHasChanged();
+    }
+
+    private void Reset()
+    {
+        HasError = false;
+        ErrorMessage = string.Empty;
+        StackTrace = string.Empty;
+        StateHasChanged();
+    }
+}

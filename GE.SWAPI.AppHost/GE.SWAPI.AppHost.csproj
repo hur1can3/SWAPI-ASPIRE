@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.0" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.1.0" />
     <ProjectReference Include="..\GE.SWAPI.ApiService\GE.SWAPI.ApiService.csproj" />
     <ProjectReference Include="..\GE.SWAPI.StarshipDbManager\GE.SWAPI.StarshipDbManager.csproj" />
     <ProjectReference Include="..\GE.SWAPI.Web\GE.SWAPI.Web.csproj" />

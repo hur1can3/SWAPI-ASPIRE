@@ -1,6 +1,29 @@
 ﻿<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        <ErrorBoundary>
+            <ChildContent>
+                <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+                <FocusOnNavigate RouteData="routeData" Selector="h1" />
+            </ChildContent>
+            <ErrorContent Context="exception">
+                <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+                    <MudPaper Elevation="3" Class="pa-8">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                            <MudText Typo="Typo.h5" Class="mb-4">Application Error</MudText>
+                            <MudText Typo="Typo.body1" Class="mb-2">
+                                Sorry, an unexpected error occurred. The error has been logged and our team will investigate.
+                            </MudText>
+                            <MudDivider Class="my-4" />
+                            <MudText Typo="Typo.body2" Class="mb-2">
+                                <strong>Error:</strong> @exception.Message
+                            </MudText>
+                            <MudButton Href="/" Color="Color.Primary" Variant="Variant.Filled" Class="mt-4">
+                                Return to Home
+                            </MudButton>
+                        </MudAlert>
+                    </MudPaper>
+                </MudContainer>
+            </ErrorContent>
+        </ErrorBoundary>
     </Found>
 </Router>
