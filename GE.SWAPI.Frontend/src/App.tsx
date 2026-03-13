@@ -7,13 +7,16 @@ import {
   Grid,
   GridCol,
   Group,
+  Modal,
   MantineProvider,
   Stack,
   Text,
+  TextInput,
+  Textarea,
 } from "@mantine/core";
-import { closeModal, openModal } from "@mantine/modals";
+import { useDisclosure } from "@mantine/hooks";
 import { theme } from "./theme";
-import './App.css'; 
+import "./App.css";
 import { DataTable } from "mantine-datatable";
 import { IconEdit, IconEye, IconTrash } from "@tabler/icons-react";
 
@@ -50,6 +53,15 @@ function App() {
   const [recordsPerPage, setRecordsPerPage] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
 
+  const [selectedStarship, setSelectedStarship] = useState<Starship | null>(null);
+  const [modalAction, setModalAction] = useState<"view" | "edit" | "delete" | null>(null);
+  const [viewOpened, { open: openView, close: closeView }] = useDisclosure(false);
+  const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false);
+  const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
+
+  const [formData, setFormData] = useState<Starship | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
   const fetchStarshipData = async () => {
     setLoading(true);
     setError(null);
@@ -83,35 +95,77 @@ function App() {
     starship: Starship;
     action: "view" | "edit" | "delete";
   }) => {
-    openModal({
-      modalId: action,
-      title:
-        action === "view"
-          ? "Showing starship information"
-          : action === "edit"
-            ? "Editing starship information"
-            : "Deleting starship",
-      children: (
-        <Stack>
-          <Text>
-            {action === "view"
-              ? "Here’s where you could show more information..."
-              : action === "edit"
-                ? "Here’s where you could put an edit form..."
-                : "Here’s where you could ask for confirmation before deleting..."}
-          </Text>
-          <Grid gutter="xs">
-            <GridCol span={2}>ID</GridCol>
-            <GridCol span={10}>{starship.id}</GridCol>
-            <GridCol span={2}>Name</GridCol>
-            <GridCol span={10}>{starship.name}</GridCol>
-            <GridCol span={2}>Model</GridCol>
-            <GridCol span={10}>{starship.model}</GridCol>
-          </Grid>
-          <Button onClick={() => closeModal(action)}>Close</Button>
-        </Stack>
-      ),
-    });
+    setSelectedStarship(starship);
+    setModalAction(action);
+    setFormData({ ...starship });
+
+    if (action === "view") {
+      openView();
+    } else if (action === "edit") {
+      openEdit();
+    } else if (action === "delete") {
+      openDelete();
+    }
+  };
+
+  const handleFormChange = (field: keyof Starship, value: string | number) => {
+    if (formData) {
+      setFormData({ ...formData, [field]: value });
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!formData) return;
+
+    setSubmitting(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/starship/${formData.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Refresh the data
+      await fetchStarshipData();
+      closeEdit();
+    } catch (err) {
+      console.error("Error updating starship:", err);
+      alert(err instanceof Error ? err.message : "Failed to update starship");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedStarship) return;
+
+    setSubmitting(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/starship/${selectedStarship.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Refresh the data
+      await fetchStarshipData();
+      closeDelete();
+    } catch (err) {
+      console.error("Error deleting starship:", err);
+      alert(err instanceof Error ? err.message : "Failed to delete starship");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -126,6 +180,179 @@ function App() {
         </header>
 
         <main className="main-content">
+          {/* View Modal */}
+          <Modal
+            opened={viewOpened}
+            onClose={closeView}
+            title="Starship Details"
+            size="lg"
+          >
+            {selectedStarship && (
+              <Stack gap="md">
+                <Grid gutter="xs">
+                  <GridCol span={4}><Text fw={600}>Name:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.name}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Model:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.model}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Manufacturer:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.manufacturer}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Cost:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.cost_in_credits} credits</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Length:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.length} meters</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Max Speed:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.max_atmosphering_speed}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Crew:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.crew}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Passengers:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.passengers}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Cargo Capacity:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.cargo_capacity}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Consumables:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.consumables}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Hyperdrive Rating:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.hyperdrive_rating}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>MGLT:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.MGLT}</Text></GridCol>
+
+                  <GridCol span={4}><Text fw={600}>Class:</Text></GridCol>
+                  <GridCol span={8}><Text>{selectedStarship.starship_class}</Text></GridCol>
+                </Grid>
+                <Group justify="flex-end">
+                  <Button onClick={closeView}>Close</Button>
+                </Group>
+              </Stack>
+            )}
+          </Modal>
+
+          {/* Edit Modal */}
+          <Modal
+            opened={editOpened}
+            onClose={closeEdit}
+            title="Edit Starship"
+            size="lg"
+          >
+            {formData && (
+              <form onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }}>
+                <Stack gap="md">
+                  <TextInput
+                    label="Name"
+                    value={formData.name}
+                    onChange={(e) => handleFormChange("name", e.target.value)}
+                    required
+                  />
+                  <TextInput
+                    label="Model"
+                    value={formData.model}
+                    onChange={(e) => handleFormChange("model", e.target.value)}
+                    required
+                  />
+                  <TextInput
+                    label="Manufacturer"
+                    value={formData.manufacturer}
+                    onChange={(e) => handleFormChange("manufacturer", e.target.value)}
+                    required
+                  />
+                  <TextInput
+                    label="Cost in Credits"
+                    value={formData.cost_in_credits}
+                    onChange={(e) => handleFormChange("cost_in_credits", e.target.value)}
+                  />
+                  <TextInput
+                    label="Length"
+                    value={formData.length}
+                    onChange={(e) => handleFormChange("length", e.target.value)}
+                  />
+                  <TextInput
+                    label="Max Atmosphering Speed"
+                    value={formData.max_atmosphering_speed}
+                    onChange={(e) => handleFormChange("max_atmosphering_speed", e.target.value)}
+                  />
+                  <TextInput
+                    label="Crew"
+                    value={formData.crew}
+                    onChange={(e) => handleFormChange("crew", e.target.value)}
+                  />
+                  <TextInput
+                    label="Passengers"
+                    value={formData.passengers}
+                    onChange={(e) => handleFormChange("passengers", e.target.value)}
+                  />
+                  <TextInput
+                    label="Cargo Capacity"
+                    value={formData.cargo_capacity}
+                    onChange={(e) => handleFormChange("cargo_capacity", e.target.value)}
+                  />
+                  <TextInput
+                    label="Consumables"
+                    value={formData.consumables}
+                    onChange={(e) => handleFormChange("consumables", e.target.value)}
+                  />
+                  <TextInput
+                    label="Hyperdrive Rating"
+                    value={formData.hyperdrive_rating}
+                    onChange={(e) => handleFormChange("hyperdrive_rating", e.target.value)}
+                  />
+                  <TextInput
+                    label="MGLT"
+                    value={formData.MGLT}
+                    onChange={(e) => handleFormChange("MGLT", e.target.value)}
+                  />
+                  <TextInput
+                    label="Starship Class"
+                    value={formData.starship_class}
+                    onChange={(e) => handleFormChange("starship_class", e.target.value)}
+                  />
+
+                  <Group justify="flex-end" mt="md">
+                    <Button variant="default" onClick={closeEdit} disabled={submitting}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" loading={submitting}>
+                      Save Changes
+                    </Button>
+                  </Group>
+                </Stack>
+              </form>
+            )}
+          </Modal>
+
+          {/* Delete Modal */}
+          <Modal
+            opened={deleteOpened}
+            onClose={closeDelete}
+            title="Delete Starship"
+            size="md"
+          >
+            {selectedStarship && (
+              <Stack gap="md">
+                <Text>
+                  Are you sure you want to delete <Text span fw={600}>{selectedStarship.name}</Text>?
+                  This action cannot be undone.
+                </Text>
+                <Group justify="flex-end" mt="md">
+                  <Button variant="default" onClick={closeDelete} disabled={submitting}>
+                    Cancel
+                  </Button>
+                  <Button color="red" onClick={handleDelete} loading={submitting}>
+                    Delete
+                  </Button>
+                </Group>
+              </Stack>
+            )}
+          </Modal>
+
           <DataTable
             withRowBorders={true}
             withColumnBorders={true}
