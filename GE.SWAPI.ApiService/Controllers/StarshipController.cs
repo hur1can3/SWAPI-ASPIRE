@@ -47,7 +47,8 @@ namespace GE.SWAPI.ApiService.Controllers
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 10,
             [FromQuery] string? sortColumn = null,
-            [FromQuery] string? sortDirection = "asc")
+            [FromQuery] string? sortDirection = "asc",
+            [FromQuery] string? searchTerm = null)
         {
             try
             {
@@ -65,6 +66,12 @@ namespace GE.SWAPI.ApiService.Controllers
                         Page = page,
                         PageSize = pageSize
                     });
+                }
+
+                // Apply filtering if search term is provided
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    allStarships = ApplyFiltering(allStarships, searchTerm);
                 }
 
                 // Apply sorting if specified
@@ -94,6 +101,27 @@ namespace GE.SWAPI.ApiService.Controllers
                 _logger.LogError($"Error retrieving paged starships: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
+        }
+
+        private IReadOnlyList<Starship> ApplyFiltering(IEnumerable<Starship> starships, string searchTerm)
+        {
+            var lowerSearchTerm = searchTerm.ToLower();
+
+            return starships.Where(s =>
+                (s.Name?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.Model?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.Manufacturer?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.CostInCredits?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.Length?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.MaxAtmospheringSpeed?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.Crew?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.Passengers?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.CargoCapacity?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.Consumables?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.HyperdriveRating?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.MGLT?.ToLower().Contains(lowerSearchTerm) ?? false) ||
+                (s.StarshipClass?.ToLower().Contains(lowerSearchTerm) ?? false)
+            ).ToList();
         }
 
         private IEnumerable<Starship> ApplySorting(IEnumerable<Starship> starships, string sortColumn, string? sortDirection)

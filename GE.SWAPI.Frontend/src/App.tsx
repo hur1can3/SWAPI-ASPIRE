@@ -56,6 +56,7 @@ function App() {
     columnAccessor: "name",
     direction: "asc",
   });
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedStarship, setSelectedStarship] = useState<Starship | null>(null);
   const [modalAction, setModalAction] = useState<"view" | "edit" | "delete" | null>(null);
@@ -76,6 +77,10 @@ function App() {
 
       if (sortStatus) {
         url += `&sortColumn=${sortStatus.columnAccessor}&sortDirection=${sortStatus.direction}`;
+      }
+
+      if (searchTerm) {
+        url += `&searchTerm=${encodeURIComponent(searchTerm)}`;
       }
 
       const response = await fetch(url);
@@ -177,17 +182,63 @@ function App() {
   };
 
   useEffect(() => {
-    fetchStarshipData();
-  }, [page, recordsPerPage, sortStatus]);
+    const timer = setTimeout(() => {
+      fetchStarshipData();
+    }, 300); // Debounce search by 300ms
+
+    return () => clearTimeout(timer);
+  }, [page, recordsPerPage, sortStatus, searchTerm]);
 
   return (
     <MantineProvider theme={theme}>
       <div className="app-container">
         <header className="app-header">
           <h3 className="app-title">SW API Starships</h3>
+                      {/* Search Input */}
+          <Group mb="md" className="app-search" >
+            <TextInput
+              placeholder="Search starships..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.currentTarget.value);
+                setPage(1); // Reset to first page when searching
+              }}
+              style={{ flex: 1, maxWidth: 400 }}
+              leftSection={
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              }
+            />
+            {searchTerm && (
+              <Button
+                variant="subtle"
+                color="gray"
+                onClick={() => {
+                  setSearchTerm("");
+                  setPage(1);
+                }}
+              >
+                Clear
+              </Button>
+            )}
+          </Group>
         </header>
 
         <main className="main-content">
+
+
           {/* View Modal */}
           <Modal
             opened={viewOpened}
