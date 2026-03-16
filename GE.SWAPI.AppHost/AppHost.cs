@@ -2,6 +2,8 @@ using Google.Protobuf.WellKnownTypes;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+builder.AddAzureAppServiceEnvironment("app-service-env");
+
 var postgres = builder.AddPostgres("postgres")
     .WithPgAdmin()
     .WithLifetime(ContainerLifetime.Persistent);
@@ -23,6 +25,7 @@ var starshipDbManager = builder.AddProject<Projects.GE_SWAPI_StarshipDbManager>(
 var apiService = builder.AddProject<Projects.GE_SWAPI_ApiService>("apiservice")
     .WithReference(starshipDb)
     .WaitFor(starshipDb)
+    .WithExternalHttpEndpoints()
     .WithHttpsEndpoint(name: "api")
     .WithUrlForEndpoint("api", url => url.Url = "/api"); 
 
@@ -35,6 +38,7 @@ builder.AddProject<Projects.GE_SWAPI_Web>("webfrontend-blazor")
 var webfrontend = builder.AddViteApp("webfrontend-react", "../GE.SWAPI.Frontend")
     .WithReference(apiService)
     .WaitFor(apiService)
+    .WithExternalHttpEndpoints()
     // Use ReferenceExpression to combine the Endpoint and the path string
     .WithEnvironment("VITE_API_URL", ReferenceExpression.Create($"{apiService.GetEndpoint("api")}/api"))
     .WithEnvironment("BROWSER", "none");
