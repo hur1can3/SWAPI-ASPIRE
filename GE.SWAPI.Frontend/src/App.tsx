@@ -63,6 +63,7 @@ function App() {
   const [viewOpened, { open: openView, close: closeView }] = useDisclosure(false);
   const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false);
   const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure(false);
+  const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false);
 
   const [formData, setFormData] = useState<Starship | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -181,6 +182,55 @@ function App() {
     }
   };
 
+  const handleCreateNew = () => {
+    setFormData({
+      id: 0,
+      name: "",
+      model: "",
+      manufacturer: "",
+      cost_in_credits: "",
+      length: "",
+      max_atmosphering_speed: "",
+      crew: "",
+      passengers: "",
+      cargo_capacity: "",
+      consumables: "",
+      hyperdrive_rating: "",
+      MGLT: "",
+      starship_class: "",
+    });
+    openCreate();
+  };
+
+  const handleCreateSubmit = async () => {
+    if (!formData) return;
+
+    setSubmitting(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/starship`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Refresh the data
+      await fetchStarshipData();
+      closeCreate();
+    } catch (err) {
+      console.error("Error creating starship:", err);
+      alert(err instanceof Error ? err.message : "Failed to create starship");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchStarshipData();
@@ -233,6 +283,13 @@ function App() {
                 Clear
               </Button>
             )}
+            <Button
+              variant="filled"
+              color="blue"
+              onClick={handleCreateNew}
+            >
+              Add New Starship
+            </Button>
           </Group>
         </header>
 
@@ -380,6 +437,98 @@ function App() {
                     </Button>
                     <Button type="submit" loading={submitting}>
                       Save Changes
+                    </Button>
+                  </Group>
+                </Stack>
+              </form>
+            )}
+          </Modal>
+
+          {/* Create Modal */}
+          <Modal
+            opened={createOpened}
+            onClose={closeCreate}
+            title="Add New Starship"
+            size="lg"
+          >
+            {formData && (
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateSubmit(); }}>
+                <Stack gap="md">
+                  <TextInput
+                    label="Name"
+                    value={formData.name}
+                    onChange={(e) => handleFormChange("name", e.target.value)}
+                    required
+                  />
+                  <TextInput
+                    label="Model"
+                    value={formData.model}
+                    onChange={(e) => handleFormChange("model", e.target.value)}
+                    required
+                  />
+                  <TextInput
+                    label="Manufacturer"
+                    value={formData.manufacturer}
+                    onChange={(e) => handleFormChange("manufacturer", e.target.value)}
+                    required
+                  />
+                  <TextInput
+                    label="Cost in Credits"
+                    value={formData.cost_in_credits}
+                    onChange={(e) => handleFormChange("cost_in_credits", e.target.value)}
+                  />
+                  <TextInput
+                    label="Length"
+                    value={formData.length}
+                    onChange={(e) => handleFormChange("length", e.target.value)}
+                  />
+                  <TextInput
+                    label="Max Atmosphering Speed"
+                    value={formData.max_atmosphering_speed}
+                    onChange={(e) => handleFormChange("max_atmosphering_speed", e.target.value)}
+                  />
+                  <TextInput
+                    label="Crew"
+                    value={formData.crew}
+                    onChange={(e) => handleFormChange("crew", e.target.value)}
+                  />
+                  <TextInput
+                    label="Passengers"
+                    value={formData.passengers}
+                    onChange={(e) => handleFormChange("passengers", e.target.value)}
+                  />
+                  <TextInput
+                    label="Cargo Capacity"
+                    value={formData.cargo_capacity}
+                    onChange={(e) => handleFormChange("cargo_capacity", e.target.value)}
+                  />
+                  <TextInput
+                    label="Consumables"
+                    value={formData.consumables}
+                    onChange={(e) => handleFormChange("consumables", e.target.value)}
+                  />
+                  <TextInput
+                    label="Hyperdrive Rating"
+                    value={formData.hyperdrive_rating}
+                    onChange={(e) => handleFormChange("hyperdrive_rating", e.target.value)}
+                  />
+                  <TextInput
+                    label="MGLT"
+                    value={formData.MGLT}
+                    onChange={(e) => handleFormChange("MGLT", e.target.value)}
+                  />
+                  <TextInput
+                    label="Starship Class"
+                    value={formData.starship_class}
+                    onChange={(e) => handleFormChange("starship_class", e.target.value)}
+                  />
+
+                  <Group justify="flex-end" mt="md">
+                    <Button variant="default" onClick={closeCreate} disabled={submitting}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" loading={submitting}>
+                      Create Starship
                     </Button>
                   </Group>
                 </Stack>
