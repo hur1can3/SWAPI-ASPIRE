@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="GE.SWAPI.ApiService/GE.SWAPI.ApiService.csproj" />
   <Project Path="GE.SWAPI.AppHost/GE.SWAPI.AppHost.csproj" />
   <Project Path="GE.SWAPI.Application/GE.SWAPI.Application.csproj" Id="23c4f168-0624-4bf1-80e6-283487c6e36d" />
