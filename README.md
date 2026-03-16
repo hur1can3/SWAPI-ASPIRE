@@ -1,4 +1,7 @@
-# GE.SWAPI
+# SWAPI-ASPIRE 
+
+SWAPI-ASPIRE is a sample app that demonstrates how to build a microservices-based application using the Aspire framework. 
+The app is a simple catalog of starships from the Star Wars universe, allowing users to view, add, edit, and delete starships.
 
 The app consists of these .NET services:
 

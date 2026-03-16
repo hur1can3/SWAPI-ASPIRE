@@ -19,7 +19,7 @@ const fields: { label: string; key: keyof Starship; suffix?: string }[] = [
   { label: "Name", key: "name" },
   { label: "Model", key: "model" },
   { label: "Manufacturer", key: "manufacturer" },
-  { label: "Cost", key: "cost_in_credits", suffix: " credits" },
+  { label: "Cost In Credits", key: "cost_in_credits", suffix: " credits" },
   { label: "Length", key: "length", suffix: " meters" },
   { label: "Max Speed", key: "max_atmosphering_speed" },
   { label: "Crew", key: "crew" },

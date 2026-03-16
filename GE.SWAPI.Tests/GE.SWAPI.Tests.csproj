@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GE.SWAPI.AppHost\GE.SWAPI.AppHost.csproj" />
+    <ProjectReference Include="..\GE.SWAPI.Domain\GE.SWAPI.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
