@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./layout.css";
 import {
   ActionIcon,
+  Alert,
   Box,
   Button,
   Grid,
@@ -17,7 +18,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { theme } from "./theme";
 import "./App.css";
 import { DataTable, type DataTableSortStatus } from "mantine-datatable";
-import { IconEdit, IconEye, IconTrash } from "@tabler/icons-react";
+import { IconAlertCircle, IconEdit, IconEye, IconTrash } from "@tabler/icons-react";
 
 interface Starship {
   id: number;
@@ -65,6 +66,7 @@ function App() {
 
   const [formData, setFormData] = useState<Starship | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const fetchStarshipData = async () => {
     setLoading(true);
@@ -110,6 +112,7 @@ function App() {
     setSelectedStarship(starship);
     setFormData({ ...starship });
 
+    setFormError(null);
     if (action === "view") {
       openView();
     } else if (action === "edit") {
@@ -130,6 +133,7 @@ function App() {
     if (!formData) return;
 
     setSubmitting(true);
+    setFormError(null);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
       const response = await fetch(`${apiUrl}/starship/${formData.id}`, {
@@ -149,7 +153,7 @@ function App() {
       closeForm();
     } catch (err) {
       console.error("Error updating starship:", err);
-      alert(err instanceof Error ? err.message : "Failed to update starship");
+      setFormError(err instanceof Error ? err.message : "Failed to update starship");
     } finally {
       setSubmitting(false);
     }
@@ -159,6 +163,7 @@ function App() {
     if (!selectedStarship) return;
 
     setSubmitting(true);
+    setFormError(null);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
       const response = await fetch(`${apiUrl}/starship/${selectedStarship.id}`, {
@@ -174,7 +179,7 @@ function App() {
       closeDelete();
     } catch (err) {
       console.error("Error deleting starship:", err);
-      alert(err instanceof Error ? err.message : "Failed to delete starship");
+      setFormError(err instanceof Error ? err.message : "Failed to delete starship");
     } finally {
       setSubmitting(false);
     }
@@ -197,6 +202,7 @@ function App() {
       MGLT: "",
       starship_class: "",
     });
+    setFormError(null);
     setFormMode("create");
     openForm();
   };
@@ -205,6 +211,7 @@ function App() {
     if (!formData) return;
 
     setSubmitting(true);
+    setFormError(null);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
       const response = await fetch(`${apiUrl}/starship`, {
@@ -224,7 +231,7 @@ function App() {
       closeForm();
     } catch (err) {
       console.error("Error creating starship:", err);
-      alert(err instanceof Error ? err.message : "Failed to create starship");
+      setFormError(err instanceof Error ? err.message : "Failed to create starship");
     } finally {
       setSubmitting(false);
     }
@@ -302,6 +309,18 @@ function App() {
 
         <main className="main-content">
 
+          {error && (
+            <Alert
+              icon={<IconAlertCircle size={16} />}
+              title="Error loading starships"
+              color="red"
+              withCloseButton
+              onClose={() => setError(null)}
+              mb="md"
+            >
+              {error}
+            </Alert>
+          )}
 
           {/* View Modal */}
           <Modal
@@ -369,6 +388,16 @@ function App() {
             {formData && (
               <form onSubmit={(e) => { e.preventDefault(); handleFormSubmit(); }}>
                 <Stack gap="md">
+                  {formError && (
+                    <Alert
+                      icon={<IconAlertCircle size={16} />}
+                      color="red"
+                      withCloseButton
+                      onClose={() => setFormError(null)}
+                    >
+                      {formError}
+                    </Alert>
+                  )}
                   <TextInput
                     label="Name"
                     value={formData.name}
@@ -460,6 +489,16 @@ function App() {
           >
             {selectedStarship && (
               <Stack gap="md">
+                {formError && (
+                  <Alert
+                    icon={<IconAlertCircle size={16} />}
+                    color="red"
+                    withCloseButton
+                    onClose={() => setFormError(null)}
+                  >
+                    {formError}
+                  </Alert>
+                )}
                 <Text>
                   Are you sure you want to delete <Text span fw={600}>{selectedStarship.name}</Text>?
                   This action cannot be undone.
