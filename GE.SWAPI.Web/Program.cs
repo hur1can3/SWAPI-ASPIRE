@@ -39,6 +39,11 @@ builder.Services.AddHttpClient<SwApiClient>(client =>
     client.BaseAddress = new("https+http://apiservice");
 });
 
+builder.Services.AddHttpClient("StarshipDbManager", client =>
+{
+    client.BaseAddress = new("https+http://starshipdbmanager");
+});
+
 
 var app = builder.Build();
 

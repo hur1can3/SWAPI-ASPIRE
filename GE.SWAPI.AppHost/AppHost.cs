@@ -38,7 +38,6 @@ builder.AddProject<Projects.GE_SWAPI_Web>("webfrontend-blazor")
 var webfrontend = builder.AddViteApp("webfrontend-react", "../GE.SWAPI.Frontend")
     .WithReference(apiService)
     .WaitFor(apiService)
-    .WithExternalHttpEndpoints()
     // Use ReferenceExpression to combine the Endpoint and the path string
     .WithEnvironment("VITE_API_URL", ReferenceExpression.Create($"{apiService.GetEndpoint("api")}/api"))
     .WithEnvironment("BROWSER", "none");

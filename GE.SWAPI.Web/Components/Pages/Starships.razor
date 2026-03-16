@@ -5,6 +5,7 @@
 @inject SwApiClient SwApiClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Starships</PageTitle>
 
@@ -31,6 +32,11 @@ else
             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                        OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add" Class="ml-4">
                 Add Starship
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" 
+                       OnClick="ResetDatabase" StartIcon="@Icons.Material.Filled.RestartAlt" Class="ml-2"
+                       Disabled="@_resetting">
+                @(_resetting ? "Resetting..." : "Reset Database")
             </MudButton>
         </ToolBarContent>
         <HeaderContent>
@@ -71,6 +77,7 @@ else
 @code {
     private Starship[]? starships;
     private bool _loading = false;
+    private bool _resetting = false;
     private string _searchString = "";
     private string? _errorMessage;
     private Starship? _selectedStarship;
@@ -324,6 +331,60 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"Error opening delete dialog: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ResetDatabase()
+    {
+        try
+        {
+            var parameters = new DialogParameters
+            {
+                { "ContentText", "Are you sure you want to reset the entire database? This will delete all starships and reseed with original data from SWAPI. This action cannot be undone." },
+                { "ButtonText", "Reset Database" },
+                { "Color", Color.Warning }
+            };
+
+            var dialog = DialogService.Show<ConfirmationDialog>("Reset Database", parameters);
+            var result = await dialog.Result;
+
+            if (result == null || result.Canceled) return;
+
+            _resetting = true;
+            StateHasChanged();
+
+            try
+            {
+                var httpClient = HttpClientFactory.CreateClient("StarshipDbManager");
+                var response = await httpClient.PostAsync("/reset-db", null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Snackbar.Add("Database reset and reseeded successfully!", Severity.Success);
+                    await LoadStarships();
+                }
+                else
+                {
+                    Snackbar.Add($"Failed to reset database. Status: {response.StatusCode}", Severity.Error);
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                Snackbar.Add($"Network error: Unable to reset database. {httpEx.Message}", Severity.Error);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error resetting database: {ex.Message}", Severity.Error);
+            }
+            finally
+            {
+                _resetting = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error opening confirmation dialog: {ex.Message}", Severity.Error);
         }
     }
 }

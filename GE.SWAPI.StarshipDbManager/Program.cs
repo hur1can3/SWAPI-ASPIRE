@@ -22,15 +22,14 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+
+app.MapPost("/reset-db", async (StarshipDbContext dbContext, ISwApiService swApiService, StarshipDbInitializer dbInitializer, CancellationToken cancellationToken) =>
 {
-    app.MapPost("/reset-db", async (StarshipDbContext dbContext, ISwApiService swApiService, StarshipDbInitializer dbInitializer, CancellationToken cancellationToken) =>
-    {
-        // Delete and recreate the database. This is useful for development scenarios to reset the database to its initial state.
-        await dbContext.Database.EnsureDeletedAsync(cancellationToken);
-        await dbInitializer.InitializeDatabaseAsync(dbContext, swApiService, cancellationToken);
-    });
-}
+    // Delete and recreate the database. This is useful for development scenarios to reset the database to its initial state.
+    await dbContext.Database.EnsureDeletedAsync(cancellationToken);
+    await dbInitializer.InitializeDatabaseAsync(dbContext, swApiService, cancellationToken);
+});
+
 
 app.MapPost("/seed-db", async (StarshipDbContext dbContext, ISwApiService swApiService, StarshipDbInitializer dbInitializer, CancellationToken cancellationToken) =>
 {
