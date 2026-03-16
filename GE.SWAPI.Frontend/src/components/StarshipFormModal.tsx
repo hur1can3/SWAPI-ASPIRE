@@ -9,6 +9,7 @@ import {
 } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
 import type { Starship } from "../types/Starship";
+import { ValidationError, type ValidationErrors } from "../services/starshipApi";
 
 interface StarshipFormModalProps {
   opened: boolean;
@@ -18,20 +19,20 @@ interface StarshipFormModalProps {
   onSubmit: (data: Starship) => Promise<void>;
 }
 
-const formFields: { label: string; key: keyof Starship; required?: boolean }[] = [
-  { label: "Name", key: "name", required: true },
-  { label: "Model", key: "model", required: true },
-  { label: "Manufacturer", key: "manufacturer", required: true },
-  { label: "Cost in Credits", key: "cost_in_credits" },
-  { label: "Length", key: "length" },
-  { label: "Max Atmosphering Speed", key: "max_atmosphering_speed" },
-  { label: "Crew", key: "crew" },
-  { label: "Passengers", key: "passengers" },
-  { label: "Cargo Capacity", key: "cargo_capacity" },
-  { label: "Consumables", key: "consumables" },
-  { label: "Hyperdrive Rating", key: "hyperdrive_rating" },
-  { label: "MGLT", key: "MGLT" },
-  { label: "Starship Class", key: "starship_class" },
+const formFields: { label: string; key: keyof Starship; serverKey: string; required?: boolean }[] = [
+  { label: "Name", key: "name", serverKey: "Name", required: true },
+  { label: "Model", key: "model", serverKey: "Model", required: true },
+  { label: "Manufacturer", key: "manufacturer", serverKey: "Manufacturer", required: true },
+  { label: "Cost in Credits", key: "cost_in_credits", serverKey: "CostInCredits" },
+  { label: "Length", key: "length", serverKey: "Length" },
+  { label: "Max Atmosphering Speed", key: "max_atmosphering_speed", serverKey: "MaxAtmospheringSpeed" },
+  { label: "Crew", key: "crew", serverKey: "Crew" },
+  { label: "Passengers", key: "passengers", serverKey: "Passengers" },
+  { label: "Cargo Capacity", key: "cargo_capacity", serverKey: "CargoCapacity" },
+  { label: "Consumables", key: "consumables", serverKey: "Consumables" },
+  { label: "Hyperdrive Rating", key: "hyperdrive_rating", serverKey: "HyperdriveRating" },
+  { label: "MGLT", key: "MGLT", serverKey: "MGLT" },
+  { label: "Starship Class", key: "starship_class", serverKey: "StarshipClass" },
 ];
 
 export function StarshipFormModal({
@@ -44,12 +45,14 @@ export function StarshipFormModal({
   const [formData, setFormData] = useState<Starship | null>(initialData);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
 
   // Reset form when modal opens with new initialData
   useEffect(() => {
     if (opened && initialData) {
       setFormData({ ...initialData });
       setFormError(null);
+      setFieldErrors({});
     }
   }, [opened, initialData]);
 
@@ -63,13 +66,24 @@ export function StarshipFormModal({
     if (!formData) return;
     setSubmitting(true);
     setFormError(null);
+    setFieldErrors({});
     try {
       await onSubmit(formData);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : `Failed to ${mode} starship`);
+      if (err instanceof ValidationError) {
+        setFieldErrors(err.errors);
+        setFormError(err.message);
+      } else {
+        setFormError(err instanceof Error ? err.message : `Failed to ${mode} starship`);
+      }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const getFieldError = (serverKey: string): string | undefined => {
+    const errors = fieldErrors[serverKey];
+    return errors?.length ? errors.join(", ") : undefined;
   };
 
   return (
@@ -92,13 +106,14 @@ export function StarshipFormModal({
                 {formError}
               </Alert>
             )}
-            {formFields.map(({ label, key, required }) => (
+            {formFields.map(({ label, key, serverKey, required }) => (
               <TextInput
                 key={key}
                 label={label}
                 value={String(formData[key])}
                 onChange={(e) => handleChange(key, e.target.value)}
                 required={required}
+                error={getFieldError(serverKey)}
               />
             ))}
             <Group justify="flex-end" mt="md">

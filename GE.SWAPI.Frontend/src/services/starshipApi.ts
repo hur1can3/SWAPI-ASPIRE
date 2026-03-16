@@ -2,6 +2,35 @@ import type { Starship, PagedResult } from "../types/Starship";
 
 const getApiUrl = () => import.meta.env.VITE_API_URL;
 
+export interface ValidationErrors {
+  [field: string]: string[];
+}
+
+export class ValidationError extends Error {
+  errors: ValidationErrors;
+  constructor(message: string, errors: ValidationErrors) {
+    super(message);
+    this.name = "ValidationError";
+    this.errors = errors;
+  }
+}
+
+async function handleValidationResponse(response: Response): Promise<void> {
+  if (response.status === 400) {
+    const body = await response.json();
+    if (body.errors) {
+      throw new ValidationError(
+        body.title || "Validation failed",
+        body.errors
+      );
+    }
+    throw new Error(body.title || "Bad request");
+  }
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+}
+
 export async function fetchStarships(params: {
   page: number;
   pageSize: number;
@@ -33,9 +62,7 @@ export async function createStarship(data: Starship): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
+  await handleValidationResponse(response);
 }
 
 export async function updateStarship(data: Starship): Promise<void> {
@@ -45,9 +72,7 @@ export async function updateStarship(data: Starship): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
+  await handleValidationResponse(response);
 }
 
 export async function deleteStarship(id: number): Promise<void> {

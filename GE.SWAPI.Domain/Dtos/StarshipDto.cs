@@ -12,10 +12,12 @@ namespace GE.SWAPI.Domain.Models
         public string Name { get; set; } = string.Empty;
 
         [JsonPropertyName("model")]
+        [Required]
         [MaxLength(200)]
         public string Model { get; set; } = string.Empty;
 
         [JsonPropertyName("manufacturer")]
+        [Required]
         [MaxLength(200)]
         public string Manufacturer { get; set; } = string.Empty;
 

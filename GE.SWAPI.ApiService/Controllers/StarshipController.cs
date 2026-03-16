@@ -205,7 +205,7 @@ namespace GE.SWAPI.ApiService.Controllers
                 }
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest("Invalid starship object");
+                    return BadRequest(ModelState);
                 }
                 var createdStarship = await _starshipService.AddStarshipAsync(starship);
                 return CreatedAtAction(nameof(GetStarshipById), new { id = createdStarship.Id }, createdStarship);
@@ -229,7 +229,7 @@ namespace GE.SWAPI.ApiService.Controllers
                 }
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest("Invalid starship object");
+                    return BadRequest(ModelState);
                 }
                 var updatedStarship = await _starshipService.UpdateStarshipAsync(id, starship);
                 if (updatedStarship == null)
