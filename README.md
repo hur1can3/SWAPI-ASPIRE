@@ -19,8 +19,11 @@ The app also includes a .NET class library project, **GE.SWAPI.ServiceDefaults**
 
 - [Aspire development environment](https://aspire.dev/get-started/prerequisites/)
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8)
+- [Docker](https://www.docker.com/)
 
 ## Running the app
+
+Make sure you have docker running, as the app uses docker-compose to run the PostgreSQL database.
 
 If using the Aspire CLI, run `aspire run` from this directory.
 
